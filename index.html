@@ -31,8 +31,7 @@
         .post h2 {
             margin: 0 0 10px 0;
             font-size: 18px;
-               text-align: left;
-
+            text-align: left;
         }
         .post p {
             color: #555;
@@ -83,7 +82,7 @@
     </div>
 
     <script>
-        const blogUrl = '/'; // Replace with your Blogger blog URL
+        const blogUrl = 'https://www.rojgarresult.app';  // Correct URL here
         const postsPerPage = 10;
         let currentPage = 1;
         let totalPosts = 0;
@@ -91,7 +90,7 @@
 
         // Function to fetch and parse Blogger RSS feed in JSON format
         function fetchBloggerFeed() {
-            const feedUrl = `https://www.rojgarresult.app/feeds/posts/default?alt=json&max-results=${postsPerPage}&start-index=${(currentPage - 1) * postsPerPage + 1}`;
+            const feedUrl = `${blogUrl}/feeds/posts/default?alt=json&max-results=${postsPerPage}&start-index=${(currentPage - 1) * postsPerPage + 1}`;
 
             fetch(feedUrl)
                 .then(response => response.json())
@@ -120,11 +119,8 @@
                 const postElement = document.createElement('div');
                 postElement.classList.add('post');
                 postElement.innerHTML = `
-                    
                     <h2><a href="${post.link}" target="_blank">${post.title}</a></h2>
-                    <div class="date"><strong>Post Date:</strong> ${post.date}               -       <a href="${post.link}" target="_blank">Read More</a>
-</div> <!-- Date in bold --> 
-                    
+                    <div class="date"><strong>Post Date:</strong> ${post.date} - <a href="${post.link}" target="_blank">Read More</a></div>
                 `;
                 rssPostsElement.appendChild(postElement);
             });
