@@ -1,0 +1,26 @@
+name: Fetch Blogger Feed
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Runs every hour
+  workflow_dispatch:  # Allows manual trigger of the workflow
+
+jobs:
+  fetch-feed:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Fetch Blogger feed
+        run: |
+          curl -s https://www.rojgarresult.app/feeds/posts/default?alt=json&max-results=10 > feed.json
+          # Fetch the Blogger feed and save it as feed.json
+
+      - name: Commit and push changes
+        uses: ad-m/github-push-action@v0.6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          commit_message: "Update Blogger feed"
+          branch: main

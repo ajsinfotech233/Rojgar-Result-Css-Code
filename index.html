@@ -82,16 +82,15 @@
     </div>
 
     <script>
-        const blogUrl = 'https://www.rojgarresult.app';  // Correct URL here
+        const feedUrl = 'https://raw.githubusercontent.com/ajsinfotech233/Rojgar-Result-Css-Code/main/feed.json';  // URL to the raw feed.json file on GitHub
+
         const postsPerPage = 10;
         let currentPage = 1;
         let totalPosts = 0;
         let posts = [];
 
-        // Function to fetch and parse Blogger RSS feed in JSON format
+        // Function to fetch and display the Blogger feed from the feed.json file
         function fetchBloggerFeed() {
-            const feedUrl = `${blogUrl}/feeds/posts/default?alt=json&max-results=${postsPerPage}&start-index=${(currentPage - 1) * postsPerPage + 1}`;
-
             fetch(feedUrl)
                 .then(response => response.json())
                 .then(data => {
@@ -120,7 +119,7 @@
                 postElement.classList.add('post');
                 postElement.innerHTML = `
                     <h2><a href="${post.link}" target="_blank">${post.title}</a></h2>
-                    <div class="date"><strong>Post Date:</strong> ${post.date} - <a href="${post.link}" target="_blank">Read More</a></div>
+                    <div class="date"><strong>Post Date:</strong> ${post.date} - <a href="${post.link}" target="_blank">Read More</a></div> 
                 `;
                 rssPostsElement.appendChild(postElement);
             });
