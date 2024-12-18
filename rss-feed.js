@@ -1,4 +1,4 @@
-const feedUrl = "https://www.rojgarresult.app/feeds/posts/default?alt=json&max-results=10"; // Replace with your RSS feed URL
+const feedUrl = "https://www.rojgarresult.app/feeds/posts/default"; // Replace with your RSS feed URL
 let feedItems = [];
 let currentIndex = 0;
 
