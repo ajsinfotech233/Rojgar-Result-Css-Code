@@ -15,7 +15,7 @@ jobs:
 
       - name: Fetch Blogger feed
         run: |
-          curl -s https://www.rojgarresult.app/feeds/posts/default?alt=json&max-results=10 > feed.json
+          curl -s https://www.rojgarresult.app/feeds/posts/default?alt=json > feed.json
           # Fetch the Blogger feed and save it as feed.json
 
       - name: Commit and push changes
