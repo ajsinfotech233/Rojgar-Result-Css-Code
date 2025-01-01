@@ -2,17 +2,27 @@
     let url = "https:\/\/www.quickpanel.in\/";
     let title = "QuickPanel";
     let website_pixel_key = "0utBxjuCX2GVwig1";
-    let website_host = "rojgarresult.app";
+    let website_host = "alert.rojgarresult.app";
     let user_analytics_is_enabled = true;
     let pixel_exposed_identifier = "pusher";
 
+    if(website_host.startsWith('www.')) {
+        website_host = website_host.replace('www.', '');
+    }
+
+    /* Make sure the website loads only where expected */
+    if(window.location.hostname !== website_host && window.location.hostname !== `www.${website_host}`) {
+        console.log(`${title} (${url}): Website does not match the set domain/subdomain.`);
+        return;
+    }
+
     /* Make sure service workers are available in the browser */
-    if (!('serviceWorker' in navigator)) {
+    if(!('serviceWorker' in navigator)) {
         return;
     }
 
     /* Make sure push api is available in the browser */
-    if (!('PushManager' in window)) {
+    if(!('PushManager' in window)) {
         return;
     }
 
@@ -24,7 +34,7 @@
 
     /* Helper to easily send logs */
     let send_tracking_data = async data => {
-        if (!user_analytics_is_enabled) return;
+        if(!user_analytics_is_enabled) return;
 
         try {
             navigator.sendBeacon(`${url}pixel-track/${website_pixel_key}`, JSON.stringify(data));
@@ -50,7 +60,7 @@
         let sw = await navigator.serviceWorker.ready;
         let subscription = await sw.pushManager.getSubscription();
 
-        if (!subscription) {
+        if(!subscription) {
             /* Dispatch custom JS event */
             window.dispatchEvent(new Event(`${pixel_exposed_identifier}.unsubscribed`));
             return true;
@@ -98,10 +108,6 @@
 
     /* Subscribe function */
     let subscribe = async () => {
-        // Open a new window or tab for subscription process
-        let newWindow = window.open('', '_blank', 'width=600,height=400'); // Open a new window
-        newWindow.document.write('<h1>Subscribing...</h1>'); // Show some loading text
-
         // Check if permission is already granted
         if (Notification.permission === 'granted') {
             let sw = await navigator.serviceWorker.ready;
@@ -139,8 +145,8 @@
             // Dispatch event for subscription success
             window.dispatchEvent(new Event(`${pixel_exposed_identifier}.subscribed`));
 
-            // Close the new window after subscription
-            newWindow.close(); // This will work because the new window was opened by this script
+            // Close the window after subscription
+            window.close(); // This will close the current window/tab
 
             return true;
         }
@@ -174,11 +180,6 @@
         });
     }
 
-    // Check if the current hostname matches either `alert.rojgarresult.app` or `www.rojgarresult.app`
-    if (window.location.hostname === website_host || window.location.hostname === `www.${website_host}`) {
-        // Call the subscribe function to trigger the flow
-        await subscribe();
-    } else {
-        console.log(`${title} (${url}): Website does not match the expected domains.`);
-    }
+    // Call the subscribe function to trigger the flow
+    await subscribe();
 })();
