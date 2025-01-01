@@ -8,29 +8,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notification Request</title>
-  <script>
-    // Function to request notification permission
-    function requestNotificationPermission() {
-      if (Notification.permission === "default") {
-        Notification.requestPermission().then(permission => {
-          if (permission === "granted") {
-            alert("Notifications allowed!");
-          } else {
-            alert("Notifications denied!");
-          }
-        });
-      } else if (Notification.permission === "granted") {
-        alert("Notifications are already allowed.");
-      } else {
-        alert("Notifications are denied.");
-      }
-    }
-
-    // Automatically request permission when the page loads
-    window.onload = function() {
-      requestNotificationPermission();
-    };
-  </script>
 </head>
 <body>
   <h1>Notification Permission</h1>
