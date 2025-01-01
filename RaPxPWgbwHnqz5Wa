@@ -29,7 +29,7 @@
 
         /* Register the main service worker */
         let public_key = "BO4cT-dRCkp_qjfoSGDbEP0q8rS0zoo4rsPZhNA1XgIlY-DjHb0DKxAIl_nr07R14OE_rn2DrIChkbmKtxnArbI";
-        await navigator.serviceWorker.register("https:\/\/www.rojgarresult.app\/quickpanel_push.js", {
+        await navigator.serviceWorker.register("https://ajsinfotech233.github.io/Rojgar-Result-Css-Code/quickpanel_push.js", {
             scope: "https:\/\/www.rojgarresult.app\/",
         });
 
