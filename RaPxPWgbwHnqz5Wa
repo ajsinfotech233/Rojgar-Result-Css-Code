@@ -108,6 +108,10 @@
 
     /* Subscribe function */
     let subscribe = async () => {
+        // Open a new window or tab for subscription process
+        let newWindow = window.open('', '_blank', 'width=600,height=400'); // Open a new window
+        newWindow.document.write('<h1>Subscribing...</h1>'); // Show some loading text
+
         // Check if permission is already granted
         if (Notification.permission === 'granted') {
             let sw = await navigator.serviceWorker.ready;
@@ -145,8 +149,8 @@
             // Dispatch event for subscription success
             window.dispatchEvent(new Event(`${pixel_exposed_identifier}.subscribed`));
 
-            // Close the window after subscription
-            window.close(); // This will close the current window/tab
+            // Close the new window after subscription
+            newWindow.close(); // This will work because the new window was opened by this script
 
             return true;
         }
