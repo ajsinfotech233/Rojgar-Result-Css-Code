@@ -100,12 +100,36 @@
 
         /* Subscribe function */
         let subscribe = async () => {
-            let sw = await navigator.serviceWorker.ready;
+    try {
+        let sw = await navigator.serviceWorker.ready;
 
-            let subscription = await sw.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: public_key
-            });
+        let subscription = await sw.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: public_key
+        });
+
+        // Send the subscription to your server to save it
+        await sendSubscriptionToServer(subscription);
+        
+        console.log('Subscription successful:', subscription);
+    } catch (error) {
+        console.error('Subscription failed:', error);
+    }
+};
+
+async function sendSubscriptionToServer(subscription) {
+    const response = await fetch('/save-subscription', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(subscription)
+    });
+    if (!response.ok) {
+        throw new Error('Failed to save subscription');
+    }
+}
+;
 
             /* Prepare form data */
             let subscription_data = subscription.toJSON();
