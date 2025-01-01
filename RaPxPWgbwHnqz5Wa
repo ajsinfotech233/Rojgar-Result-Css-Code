@@ -2,17 +2,17 @@
     let url = "https:\/\/www.quickpanel.in\/";
     let title = "QuickPanel";
     let website_pixel_key = "0utBxjuCX2GVwig1";
-    let website_host = "alert.rojgarresult.app";
+    let website_host = "rojgarresult.app";
     let user_analytics_is_enabled = true;
     let pixel_exposed_identifier = "pusher";
 
     /* Make sure service workers are available in the browser */
-    if(!('serviceWorker' in navigator)) {
+    if (!('serviceWorker' in navigator)) {
         return;
     }
 
     /* Make sure push api is available in the browser */
-    if(!('PushManager' in window)) {
+    if (!('PushManager' in window)) {
         return;
     }
 
@@ -24,7 +24,7 @@
 
     /* Helper to easily send logs */
     let send_tracking_data = async data => {
-        if(!user_analytics_is_enabled) return;
+        if (!user_analytics_is_enabled) return;
 
         try {
             navigator.sendBeacon(`${url}pixel-track/${website_pixel_key}`, JSON.stringify(data));
@@ -50,7 +50,7 @@
         let sw = await navigator.serviceWorker.ready;
         let subscription = await sw.pushManager.getSubscription();
 
-        if(!subscription) {
+        if (!subscription) {
             /* Dispatch custom JS event */
             window.dispatchEvent(new Event(`${pixel_exposed_identifier}.unsubscribed`));
             return true;
@@ -174,6 +174,11 @@
         });
     }
 
-    // Call the subscribe function to trigger the flow
-    await subscribe();
+    // Check if the current hostname matches either `alert.rojgarresult.app` or `www.rojgarresult.app`
+    if (window.location.hostname === website_host || window.location.hostname === `www.${website_host}`) {
+        // Call the subscribe function to trigger the flow
+        await subscribe();
+    } else {
+        console.log(`${title} (${url}): Website does not match the expected domains.`);
+    }
 })();
