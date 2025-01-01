@@ -1,33 +1,40 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Pixel Code - https://www.quickpanel.in/ -->
+    <!-- Pixel Code - https://www.quickpanel.in/ -->
 <script defer src="https://www.quickpanel.in/pixel/0utBxjuCX2GVwig1"></script>
 <!-- END Pixel Code -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RSS Feed Viewer</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
+  <title>Notification Request</title>
+  <script>
+    // Function to request notification permission
+    function requestNotificationPermission() {
+      if (Notification.permission === "default") {
+        Notification.requestPermission().then(permission => {
+          if (permission === "granted") {
+            alert("Notifications allowed!");
+          } else {
+            alert("Notifications denied!");
+          }
+        });
+      } else if (Notification.permission === "granted") {
+        alert("Notifications are already allowed.");
+      } else {
+        alert("Notifications are denied.");
+      }
     }
-    #content {
-      margin-bottom: 20px;
-    }
-    #navigation button {
-      margin: 5px;
-    }
-  </style>
+
+    // Automatically request permission when the page loads
+    window.onload = function() {
+      requestNotificationPermission();
+    };
+  </script>
 </head>
 <body>
-  <h1>RSS Feed Viewer</h1>
-  <div id="content">Loading...</div>
-  <div id="navigation">
-    <button id="prev">Previous</button>
-    <button id="next">Next</button>
-  </div>
-
-  <script src="rss-feed.js"></script>
+  <h1>Notification Permission</h1>
+  <p>This page will automatically request notification permission when loaded.</p>
 </body>
 </html>
+
