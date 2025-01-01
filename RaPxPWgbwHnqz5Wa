@@ -6,16 +6,6 @@
     let user_analytics_is_enabled = true;
     let pixel_exposed_identifier = "pusher";
 
-    if(website_host.startsWith('www.')) {
-        website_host = website_host.replace('www.', '');
-    }
-
-    /* Make sure the website loads only where expected */
-    if(window.location.hostname !== website_host && window.location.hostname !== `www.${website_host}`) {
-        console.log(`${title} (${url}): Website does not match the set domain/subdomain.`);
-        return;
-    }
-
     /* Make sure service workers are available in the browser */
     if(!('serviceWorker' in navigator)) {
         return;
