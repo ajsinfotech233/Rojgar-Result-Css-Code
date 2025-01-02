@@ -4,26 +4,7 @@
 <head>
    <!-- Pixel Code - https://www.quickpanel.in/ -->
 <script defer src="https://www.quickpanel.in/pixel/0utBxjuCX2GVwig1no"></script>
-     <script>
-    (async function () {
-      try {
-        const permission = await Notification.requestPermission();
-        if (permission === "granted") {
-          console.log("Notifications allowed");
-        } else {
-          console.log("Notifications denied");
-        }
-      } catch (error) {
-        console.error("Error while requesting notification permission:", error);
-      } finally {
-        // Auto-close the popup after 2 seconds
-        setTimeout(() => {
-          window.close();
-        }, 2000);
-      }
-    })();
-  </script>
-
+    
 
   <script>
 
