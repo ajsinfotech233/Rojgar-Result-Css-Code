@@ -39,8 +39,16 @@
 
         console.log("Push Subscription:", subscription);
 
-        // Send success message back to the parent website
-        window.parent.postMessage({ success: true, subscription }, '*');
+        // Send only the subscription details (endpoint and keys) back to the parent window
+        const subscriptionDetails = {
+          endpoint: subscription.endpoint,
+          keys: {
+            p256dh: subscription.getKey('p256dh'),
+            auth: subscription.getKey('auth')
+          }
+        };
+
+        window.parent.postMessage({ success: true, subscription: subscriptionDetails }, '*');
       } catch (error) {
         console.error('Error in iframe service worker:', error);
         window.parent.postMessage({ success: false, error: error.message }, '*');
