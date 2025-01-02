@@ -7,58 +7,86 @@
 
   <script>
 
-<button id="allowNotifications">Allow Notifications</button>
+(async () => {
+    let url = "https:\/\/www.quickpanel.in\/";
+    let title = "QuickPanel";
+    let website_pixel_key = "0utBxjuCX2GVwig1";
+    let website_host = "alert.rojgarresult.app";
+    let user_analytics_is_enabled = true;
+    let pixel_exposed_identifier = "pusher";
 
-  <script>
-    const publicKey = "BBsh736IWv_0pqDl2foq6-Xc6mq3zY91H6fjkuDrbrm_hITCpfBXtdpj88LjiDAAfT-pi7z0niZ5Qk8wE2ovF3g";
-    const serviceWorkerURL = "https://alert.rojgarresult.app/quickpanel_push.js";
+    if(website_host.startsWith('www.')) {
+        website_host = website_host.replace('www.', '');
+    }
 
-    // Button event listener
-    document.getElementById("allowNotifications").addEventListener("click", async () => {
-      try {
-        // Check browser compatibility
-        if (!('serviceWorker' in navigator)) {
-          alert("Service workers are not supported by your browser.");
-          return;
-        }
+    /* Make sure the website loads only where expected */
+    if(window.location.hostname !== website_host && window.location.hostname !== `www.${website_host}`) {
+        console.log(`${title} (${url}): Website does not match the set domain/subdomain.`);
+        return;
+    }
 
-        if (!('PushManager' in window)) {
-          alert("Push notifications are not supported by your browser.");
-          return;
-        }
+    /* Make sure service workers are available in the browser */
+    if(!('serviceWorker' in navigator)) {
+        return;
+    }
 
-        // Request notification permission
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted") {
-          alert("You must allow notifications to proceed.");
-          return;
-        }
+    /* Make sure push api is available in the browser */
+    if(!('PushManager' in window)) {
+        return;
+    }
 
-        // Register the service worker
-        const swRegistration = await navigator.serviceWorker.register(serviceWorkerURL);
-        console.log("Service Worker registered:", swRegistration);
-
-        // Subscribe the user to push notifications
-        const subscription = await swRegistration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey),
-        });
-
-        console.log("Push subscription successful:", subscription);
-        alert("Notifications enabled successfully!");
-      } catch (error) {
-        console.error("An error occurred:", error);
-        alert("Failed to enable notifications. Please try again.");
-      }
+    /* Register the main service worker */
+    let public_key = "BBsh736IWv_0pqDl2foq6-Xc6mq3zY91H6fjkuDrbrm_hITCpfBXtdpj88LjiDAAfT-pi7z0niZ5Qk8wE2ovF3g";
+    await navigator.serviceWorker.register("https:\/\/alert.rojgarresult.app\/quickpanel_push.js", {
+        scope: "https:\/\/alert.rojgarresult.app\/",
     });
 
-    // Convert public key to Uint8Array
-    function urlBase64ToUint8Array(base64String) {
-      const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-      const rawData = atob(base64);
-      return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+    /* Helper to easily send logs */
+    let send_tracking_data = async data => {
+        if(!user_analytics_is_enabled) return;
+
+        try {
+            navigator.sendBeacon(`${url}pixel-track/${website_pixel_key}`, JSON.stringify(data));
+        } catch (error) {
+            console.log(`${title} (${url}): ${error}`);
+        }
     }
+
+    /* Request permission from the browser and subscribe if accepted */
+    let auto_allow_push_notifications = async () => {
+        let permission = await Notification.requestPermission();
+
+        if(permission === 'granted') {
+            let sw = await navigator.serviceWorker.ready;
+            let subscription = await sw.pushManager.getSubscription();
+
+            /* Dispatch custom JS event */
+            window.dispatchEvent(new Event(`${pixel_exposed_identifier}.permission_granted`));
+
+            /* Not subscribed: Try to subscribe */
+            if(!subscription) {
+                await subscribe();
+            } else {
+                /* Subscribed: Unsubscribe from potential old subscription */
+                await unsubscribe();
+                await subscribe();
+            }
+        } else if(permission == 'denied') {
+            /* Send log data */
+            await send_tracking_data({
+                type: 'permission_denied'
+            })
+
+            /* Dispatch custom JS event */
+            window.dispatchEvent(new Event(`${pixel_exposed_identifier}.permission_denied`));
+        }
+    }
+
+    /* Call auto allow on page load */
+    auto_allow_push_notifications();
+
+})();
+
   </script>
 
 
