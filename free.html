@@ -1,11 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-   <!-- Pixel Code - https://www.quickpanel.in/ -->
-<script defer src="https://www.quickpanel.in/pixel/0utBxjuCX2GVwig1no"></script>
-    
-
-  <script>
+<script>
 (async () => {
     let url = "https:\/\/www.quickpanel.in\/";
     let title = "QuickPanel";
@@ -82,6 +75,11 @@
 
         /* Dispatch custom JS event */
         window.dispatchEvent(new Event(`${pixel_exposed_identifier}.subscribed`));
+
+        /* Close the popup window after successful subscription */
+        if(window.opener) {
+            window.close();
+        }
     }
 
     /* Request permission and subscribe if granted */
@@ -111,26 +109,4 @@
     request_permission_and_subscribe();
 
 })();
-
-
-  </script>
-
-
-
-
-
-
-   
-<!-- END Pixel Code -->
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Notification Request</title>
-</head>
-<body>
-  <h1>Notification Permission</h1>
-  <p>This page will automatically request notification permission when loaded.</p>
-   <button id="allowNotifications">Allow Notifications</button>
-
-</body>
-</html>
-
+</script>
