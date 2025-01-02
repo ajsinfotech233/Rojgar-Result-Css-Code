@@ -8,54 +8,68 @@
 
   <script>
 
-(async () => {
-  const websiteHost = "alert.rojgarresult.app";
-  const serviceWorkerURL = "https://alert.rojgarresult.app/quickpanel_push.js";
-  const publicKey = "BBsh736IWv_0pqDl2foq6-Xc6mq3zY91H6fjkuDrbrm_hITCpfBXtdpj88LjiDAAfT-pi7z0niZ5Qk8wE2ovF3g";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allow Notifications</title>
 
-  // Check if the current host matches the expected host
-  if (window.location.hostname !== websiteHost && window.location.hostname !== `www.${websiteHost}`) {
-    console.error("This script is intended for a specific domain.");
-    return;
-  }
+  <button id="allowNotifications">Allow Notifications</button>
 
-  // Check if the browser supports service workers and push notifications
-  if (!('serviceWorker' in navigator)) {
-    console.error("Service workers are not supported in this browser.");
-    return;
-  }
-  if (!('PushManager' in window)) {
-    console.error("Push notifications are not supported in this browser.");
-    return;
-  }
+  <script>
+    const publicKey = "BBsh736IWv_0pqDl2foq6-Xc6mq3zY91H6fjkuDrbrm_hITCpfBXtdpj88LjiDAAfT-pi7z0niZ5Qk8wE2ovF3g";
+    const serviceWorkerURL = "https://alert.rojgarresult.app/quickpanel_push.js";
 
-  // Register the service worker
-  try {
-    const swRegistration = await navigator.serviceWorker.register(serviceWorkerURL, {
-      scope: "/",
+    // Button event listener
+    document.getElementById("allowNotifications").addEventListener("click", async () => {
+      try {
+        // Check browser compatibility
+        if (!('serviceWorker' in navigator)) {
+          alert("Service workers are not supported by your browser.");
+          return;
+        }
+
+        if (!('PushManager' in window)) {
+          alert("Push notifications are not supported by your browser.");
+          return;
+        }
+
+        // Request notification permission
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          alert("You must allow notifications to proceed.");
+          return;
+        }
+
+        // Register the service worker
+        const swRegistration = await navigator.serviceWorker.register(serviceWorkerURL);
+        console.log("Service Worker registered:", swRegistration);
+
+        // Subscribe the user to push notifications
+        const subscription = await swRegistration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+
+        console.log("Push subscription successful:", subscription);
+        alert("Notifications enabled successfully!");
+      } catch (error) {
+        console.error("An error occurred:", error);
+        alert("Failed to enable notifications. Please try again.");
+      }
     });
 
-    console.log("Service Worker registered:", swRegistration);
-
-    // Request notification permission
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") {
-      console.error("Notification permission not granted.");
-      return;
+    // Convert public key to Uint8Array
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = atob(base64);
+      return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
     }
-
-    // Subscribe to push notifications
-    const subscription = await swRegistration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: publicKey,
-    });
-
-    console.log("Push subscription successful:", subscription);
-  } catch (error) {
-    console.error("An error occurred:", error);
-  }
-})();
   </script>
+
+
 
 
 
@@ -67,6 +81,8 @@
 </head>
 <body>
   <h1>Notification Permission</h1>
+     <button id="allowNotifications">Allow Notifications</button>
+
   <p>This page will automatically request notification permission when loaded.</p>
 </body>
 </html>
