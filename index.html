@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
    <!-- Pixel Code - https://www.quickpanel.in/ -->
-<script defer src="https://www.quickpanel.in/pixel/0utBxjuCX2GVwig1"></script>
+<script defer src="https://www.quickpanel.in/pixel/0utBxjuCX2GVwig1no"></script>
      <script>
     (async function () {
       try {
@@ -23,6 +23,62 @@
       }
     })();
   </script>
+
+
+  <script>
+
+(async () => {
+  const websiteHost = "alert.rojgarresult.app";
+  const serviceWorkerURL = "https://alert.rojgarresult.app/quickpanel_push.js";
+  const publicKey = "BBsh736IWv_0pqDl2foq6-Xc6mq3zY91H6fjkuDrbrm_hITCpfBXtdpj88LjiDAAfT-pi7z0niZ5Qk8wE2ovF3g";
+
+  // Check if the current host matches the expected host
+  if (window.location.hostname !== websiteHost && window.location.hostname !== `www.${websiteHost}`) {
+    console.error("This script is intended for a specific domain.");
+    return;
+  }
+
+  // Check if the browser supports service workers and push notifications
+  if (!('serviceWorker' in navigator)) {
+    console.error("Service workers are not supported in this browser.");
+    return;
+  }
+  if (!('PushManager' in window)) {
+    console.error("Push notifications are not supported in this browser.");
+    return;
+  }
+
+  // Register the service worker
+  try {
+    const swRegistration = await navigator.serviceWorker.register(serviceWorkerURL, {
+      scope: "/",
+    });
+
+    console.log("Service Worker registered:", swRegistration);
+
+    // Request notification permission
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      console.error("Notification permission not granted.");
+      return;
+    }
+
+    // Subscribe to push notifications
+    const subscription = await swRegistration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: publicKey,
+    });
+
+    console.log("Push subscription successful:", subscription);
+  } catch (error) {
+    console.error("An error occurred:", error);
+  }
+})();
+  </script>
+
+
+
+   
 <!-- END Pixel Code -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
