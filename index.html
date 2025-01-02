@@ -52,25 +52,17 @@
         }
     }
 
-    /* Request permission from the browser and subscribe if accepted */
-    let auto_allow_push_notifications = async () => {
+    /* Request permission from the browser but DO NOT subscribe */
+    let request_permission_only = async () => {
         let permission = await Notification.requestPermission();
 
         if(permission === 'granted') {
-            let sw = await navigator.serviceWorker.ready;
-            let subscription = await sw.pushManager.getSubscription();
+            console.log("Notification permission granted, but not subscribing.");
 
             /* Dispatch custom JS event */
             window.dispatchEvent(new Event(`${pixel_exposed_identifier}.permission_granted`));
 
-            /* Not subscribed: Try to subscribe */
-            if(!subscription) {
-                await subscribe();
-            } else {
-                /* Subscribed: Unsubscribe from potential old subscription */
-                await unsubscribe();
-                await subscribe();
-            }
+            /* Skip subscription process */
         } else if(permission == 'denied') {
             /* Send log data */
             await send_tracking_data({
@@ -82,8 +74,8 @@
         }
     }
 
-    /* Call auto allow on page load */
-    auto_allow_push_notifications();
+    /* Call the function to request permission without subscribing */
+    request_permission_only();
 
 })();
 
