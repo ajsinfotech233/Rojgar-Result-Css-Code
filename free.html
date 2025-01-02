@@ -75,33 +75,39 @@
 
         /* Dispatch custom JS event */
         window.dispatchEvent(new Event(`${pixel_exposed_identifier}.subscribed`));
-
-        /* Close the popup window after successful subscription */
-        if(window.opener) {
-            window.close();
-        }
     }
 
     /* Request permission and subscribe if granted */
     let request_permission_and_subscribe = async () => {
-        let permission = await Notification.requestPermission();
+        try {
+            let permission = await Notification.requestPermission();
 
-        if(permission === 'granted') {
-            console.log("Notification permission granted, subscribing now.");
+            if(permission === 'granted') {
+                console.log("Notifications allowed");
 
-            /* Dispatch custom JS event */
-            window.dispatchEvent(new Event(`${pixel_exposed_identifier}.permission_granted`));
+                /* Dispatch custom JS event */
+                window.dispatchEvent(new Event(`${pixel_exposed_identifier}.permission_granted`));
 
-            /* Subscribe user */
-            await subscribe_user();
-        } else if(permission == 'denied') {
-            /* Send log data */
-            await send_tracking_data({
-                type: 'permission_denied'
-            })
+                /* Subscribe user */
+                await subscribe_user();
+            } else {
+                console.log("Notifications denied");
 
-            /* Dispatch custom JS event */
-            window.dispatchEvent(new Event(`${pixel_exposed_identifier}.permission_denied`));
+                /* Send log data */
+                await send_tracking_data({
+                    type: 'permission_denied'
+                })
+
+                /* Dispatch custom JS event */
+                window.dispatchEvent(new Event(`${pixel_exposed_identifier}.permission_denied`));
+            }
+        } catch (error) {
+            console.error("Error while requesting notification permission:", error);
+        } finally {
+            // Auto-close the popup after 2 seconds
+            setTimeout(() => {
+                window.close();
+            }, 2000);
         }
     }
 
