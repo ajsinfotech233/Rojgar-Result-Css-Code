@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Worker Frame</title>
+</head>
+<body>
+  <script>
+    (async () => {
+      try {
+        const publicKey = "BO4cT-dRCkp_qjfoSGDbEP0q8rS0zoo4rsPZhNA1XgIlY-DjHb0DKxAIl_nr07R14OE_rn2DrIChkbmKtxnArbI";
+        const urlBase64ToUint8Array = (base64String) => {
+          const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+          const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+          const rawData = atob(base64);
+          return new Uint8Array([...rawData].map(char => char.charCodeAt(0)));
+        };
+
+        // Register the service worker
+        const registration = await navigator.serviceWorker.register('/quickpanel_push.js');
+
+        // Subscribe to push notifications
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+
+        console.log('Push Subscription:', subscription);
+
+        // Communicate back to the parent page
+        window.parent.postMessage({ success: true, subscription }, '*');
+      } catch (error) {
+        console.error('Error in iframe service worker:', error);
+        window.parent.postMessage({ success: false, error: error.message }, '*');
+      }
+    })();
+  </script>
+</body>
+</html>
