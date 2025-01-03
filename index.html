@@ -26,6 +26,8 @@
             }).catch(function(error) {
                 console.error('Service Worker registration failed:', error);
             });
+        } else {
+            console.error('Service Worker or PushManager not supported by this browser.');
         }
     }
 
@@ -66,15 +68,20 @@
         registration.pushManager.getSubscription().then(function(subscription) {
             if (subscription) {
                 console.log('User is already subscribed.');
-                return; // No need to subscribe again
+                return subscription; // Return the existing subscription
             } else {
                 console.log('No active subscription found.');
+                return null; // Proceed with the subscription
             }
-
-            return registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: public_key
-            });
+        }).then(function(subscription) {
+            if (!subscription) {
+                return registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: public_key
+                });
+            } else {
+                return subscription; // If user is already subscribed, return the existing subscription
+            }
         }).then(function(subscription) {
             const subscriptionData = subscription.toJSON();
             const data = {
@@ -86,6 +93,7 @@
                 type: 'create'
             };
 
+            // Send the subscription data to the server (for tracking purposes)
             return fetch(`${url}pixel-track/${website_pixel_key}`, {
                 method: 'POST',
                 headers: {
@@ -97,6 +105,9 @@
             console.log('Subscription successful');
         }).catch(function(error) {
             console.error('Subscription failed:', error);
+            if (error.name === 'NotAllowedError') {
+                console.error('Permission denied, user has not allowed push notifications.');
+            }
         });
     }
 
