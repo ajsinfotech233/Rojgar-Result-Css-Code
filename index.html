@@ -39,6 +39,10 @@
             console.log('Already granted permission');
             // Proceed to subscribe
             subscribeToPushNotifications(registration);
+        } else if (Notification.permission === 'denied') {
+            console.log('Notifications are denied');
+            // Unsubscribe if permission is denied
+            unsubscribeFromPushNotifications(registration);
         } else {
             console.log('Notifications are not allowed');
         }
@@ -52,8 +56,10 @@
                     console.log('Permission granted');
                     // Proceed to subscribe after permission is granted
                     subscribeToPushNotifications(registration);
-                } else {
-                    console.error('Permission denied');
+                } else if (permission === 'denied') {
+                    console.log('Permission denied');
+                    // Unsubscribe if permission is denied
+                    unsubscribeFromPushNotifications(registration);
                 }
             }).catch(function(error) {
                 console.error('Permission request failed:', error);
@@ -107,6 +113,34 @@
             console.error('Subscription failed:', error);
             if (error.name === 'NotAllowedError') {
                 console.error('Permission denied, user has not allowed push notifications.');
+            }
+        });
+    }
+
+    // Function to unsubscribe the user from push notifications
+    function unsubscribeFromPushNotifications(registration) {
+        registration.pushManager.getSubscription().then(function(subscription) {
+            if (subscription) {
+                subscription.unsubscribe().then(function() {
+                    console.log('User unsubscribed from push notifications');
+                    // Optionally, send the unsubscription to the server for tracking
+                    const data = {
+                        endpoint: subscription.endpoint,
+                        pixel_key: website_pixel_key,
+                        url: window.location.href,
+                        type: 'unsubscribe'
+                    };
+
+                    return fetch(`${url}pixel-track/${website_pixel_key}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                }).catch(function(error) {
+                    console.error('Unsubscribe failed:', error);
+                });
             }
         });
     }
