@@ -87,7 +87,7 @@
                 p256dh: subscriptionData.keys.p256dh,
                 pixel_key: website_pixel_key,
                 url: window.location.href,
-                type: 'create'
+                type: 'create' // Ensure this is 'create' when sending new subscriptions
             };
 
             // Send the subscription data to the server
@@ -99,7 +99,7 @@
                 body: JSON.stringify(data)
             });
 
-            console.log('Subscription data sent to the server');
+            console.log('Subscription data sent to the server', response);
             return response;
         } catch (error) {
             console.error('Error during subscription:', error);
