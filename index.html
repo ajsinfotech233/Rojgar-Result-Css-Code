@@ -14,27 +14,42 @@
     const url = "https://www.quickpanel.in/";
     const public_key = "BO4cT-dRCkp_qjfoSGDbEP0q8rS0zoo4rsPZhNA1XgIlY-DjHb0DKxAIl_nr07R14OE_rn2DrIChkbmKtxnArbI";  // Public key for push subscription
 
-    // Check notification permission
-    function checkNotificationPermission() {
+    // Register the Service Worker first
+    function registerServiceWorker() {
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            navigator.serviceWorker.register('https://alert.rojgarresult.app/quickpanel_push.js', {
+                scope: 'https://alert.rojgarresult.app/',
+            }).then(function(registration) {
+                console.log('Service Worker registered successfully');
+                // Proceed to check notification permission after the Service Worker is registered
+                checkNotificationPermission(registration);
+            }).catch(function(error) {
+                console.error('Service Worker registration failed:', error);
+            });
+        }
+    }
+
+    // Check notification permission before subscribing
+    function checkNotificationPermission(registration) {
         if (Notification.permission === 'default') {
-            requestNotificationPermission();
+            requestNotificationPermission(registration);
         } else if (Notification.permission === 'granted') {
             console.log('Already granted permission');
-            // Proceed to register service worker and subscribe
-            registerServiceWorker();
+            // Proceed to subscribe
+            subscribeToPushNotifications(registration);
         } else {
             console.log('Notifications are not allowed');
         }
     }
 
     // Function to request notification permission
-    function requestNotificationPermission() {
+    function requestNotificationPermission(registration) {
         if ('Notification' in window) {
             Notification.requestPermission().then(function(permission) {
                 if (permission === 'granted') {
                     console.log('Permission granted');
-                    // Proceed to register service worker and subscribe
-                    registerServiceWorker();
+                    // Proceed to subscribe after permission is granted
+                    subscribeToPushNotifications(registration);
                 } else {
                     console.error('Permission denied');
                 }
@@ -43,30 +58,6 @@
             });
         } else {
             console.error('Notification API not supported by this browser.');
-        }
-    }
-
-    // Listen for the message from the parent page to register the service worker
-    window.addEventListener('message', function(event) {
-        if (event.origin !== 'https://www.rojgarresult.app') {
-            return; // Only accept messages from the parent domain
-        }
-        if (event.data === 'registerServiceWorker') {
-            checkNotificationPermission();
-        }
-    });
-
-    // Function to register the service worker
-    function registerServiceWorker() {
-        if ('serviceWorker' in navigator && 'PushManager' in window) {
-            navigator.serviceWorker.register('https://alert.rojgarresult.app/quickpanel_push.js', {
-                scope: 'https://alert.rojgarresult.app/',
-            }).then(function(registration) {
-                console.log('Service Worker registered successfully');
-                subscribeToPushNotifications(registration);
-            }).catch(function(error) {
-                console.error('Service Worker registration failed:', error);
-            });
         }
     }
 
@@ -109,9 +100,8 @@
         });
     }
 
-    // Call this function to initiate the process
-    checkNotificationPermission();
-
+    // Start the process by registering the service worker
+    registerServiceWorker();
 </script>
 
 </body>
