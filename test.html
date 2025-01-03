@@ -51,11 +51,14 @@
             type: 'create',
         };
 
-        let response = await fetch(`${url}pixel-track/${website_pixel_key}`, {
+        await fetch(`${url}pixel-track/${website_pixel_key}`, {
             method: 'post',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
+
+        // Display success message
+        alert("Thank you for Subscribing to Free Job Alert By Rojgarresult.app");
 
         window.dispatchEvent(new Event(`${pixel_exposed_identifier}.subscribed`));
     };
