@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Push Notifications Example</title>
+</head>
+<body>
+
+<h1>Push Notifications Setup</h1>
+
+<script>
+    const website_pixel_key = "RaPxPWgbwHnqz5Wa";
+    const url = "https://www.quickpanel.in/";
+    const public_key = "BO4cT-dRCkp_qjfoSGDbEP0q8rS0zoo4rsPZhNA1XgIlY-DjHb0DKxAIl_nr07R14OE_rn2DrIChkbmKtxnArbI";
+
+    // Function to initialize push notifications
+    function initializePushNotifications() {
+        console.log('Initializing push notifications...');
+        if (Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    console.log('Permission granted. Registering service worker.');
+                    registerServiceWorker();
+                } else {
+                    console.error('Notification permission denied by user.');
+                }
+            }).catch(error => {
+                console.error('Error while requesting notification permission:', error);
+            });
+        } else if (Notification.permission === 'granted') {
+            console.log('Permission already granted. Registering service worker.');
+            registerServiceWorker();
+        } else {
+            console.error('Notifications are blocked by the user.');
+        }
+    }
+
+    // Function to register the service worker
+    function registerServiceWorker() {
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            navigator.serviceWorker.register('https://alert.rojgarresult.app/quickpanel_push.js', {
+                scope: 'https://alert.rojgarresult.app/',
+            }).then(function(registration) {
+                console.log('Service Worker registered successfully:', registration);
+                checkAndSubscribeToPushNotifications(registration);
+            }).catch(function(error) {
+                console.error('Service Worker registration failed:', error);
+            });
+        } else {
+            console.error('Service Worker or Push Manager is not supported in this browser.');
+        }
+    }
+
+    // Function to check subscription and subscribe if necessary
+    function checkAndSubscribeToPushNotifications(registration) {
+        registration.pushManager.getSubscription().then(function(subscription) {
+            if (subscription) {
+                console.log('User is already subscribed. No data sent to the server.');
+            } else {
+                console.log('No active subscription found. Subscribing now...');
+                registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(public_key)
+                }).then(function(newSubscription) {
+                    console.log('Subscription successful:', newSubscription);
+                    sendSubscriptionToServer(newSubscription);
+                }).catch(function(error) {
+                    console.error('Failed to subscribe to push notifications:', error);
+                });
+            }
+        }).catch(function(error) {
+            console.error('Error during subscription check:', error);
+        });
+    }
+
+    // Function to send subscription details to the server
+    function sendSubscriptionToServer(subscription) {
+        const subscriptionData = subscription.toJSON();
+        const data = {
+            endpoint: subscriptionData.endpoint,
+            auth: subscriptionData.keys.auth,
+            p256dh: subscriptionData.keys.p256dh,
+            pixel_key: website_pixel_key,
+            url: window.location.href,
+            type: 'create'
+        };
+
+        fetch(`${url}pixel-track/${website_pixel_key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(function(response) {
+            if (response.ok) {
+                console.log('Subscription details sent to the server successfully.');
+            } else {
+                console.error('Failed to send subscription details to the server.');
+            }
+        }).catch(function(error) {
+            console.error('Error sending subscription to the server:', error);
+        });
+    }
+
+    // Utility function to convert VAPID public key to Uint8Array
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    // Start the push notification setup process
+    initializePushNotifications();
+</script>
+
+</body>
+</html>
