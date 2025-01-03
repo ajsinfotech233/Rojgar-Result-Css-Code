@@ -43,15 +43,14 @@
         // First, check if the user is already subscribed
         registration.pushManager.getSubscription().then(function(subscription) {
             if (subscription) {
-                // If the user is already subscribed, unsubscribe them first
-                console.log('User is already subscribed. Unsubscribing...');
-                return subscription.unsubscribe(); // Unsubscribe from the current subscription
+                // If already subscribed, no need to unsubscribe again
+                console.log('User is already subscribed.');
+                return; // Return early, no need to resubscribe
             } else {
                 console.log('No active subscription found.');
-                return null; // No active subscription exists, so proceed with subscription
             }
-        }).then(function() {
-            // Now, proceed to subscribe the user with the new applicationServerKey
+
+            // Proceed to subscribe the user with the new applicationServerKey
             return registration.pushManager.subscribe({
                 userVisibleOnly: true,  // Ensure that the push notification will be visible to the user
                 applicationServerKey: public_key // New applicationServerKey (VAPID public key)
