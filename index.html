@@ -141,6 +141,8 @@
                 }).catch(function(error) {
                     console.error('Unsubscribe failed:', error);
                 });
+            } else {
+                console.log('No active subscription found to unsubscribe.');
             }
         });
     }
