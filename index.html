@@ -33,13 +33,13 @@
 
     // Check notification permission before subscribing
     async function checkNotificationPermission(registration) {
-        // Check the current notification permission
         if (Notification.permission === 'granted') {
             console.log('Permission already granted');
-            await subscribeToPushNotifications(registration); // Proceed to subscribe if permission is granted
+            // Subscribe the user if permission is granted
+            await subscribeToPushNotifications(registration);
         } else if (Notification.permission === 'denied') {
             console.log('Notifications are denied');
-            await unsubscribeFromPushNotifications(registration); // If denied, unsubscribe if any active subscription exists
+            await unsubscribeFromPushNotifications(registration); // Unsubscribe the user if permission is denied
         } else {
             console.log('Notification permission is default, requesting permission');
             await requestNotificationPermission(registration); // Request permission if it's in the default state
@@ -52,10 +52,10 @@
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
                 console.log('Permission granted');
-                await subscribeToPushNotifications(registration);
+                await subscribeToPushNotifications(registration); // Subscribe after permission is granted
             } else if (permission === 'denied') {
                 console.log('Permission denied');
-                await unsubscribeFromPushNotifications(registration);
+                await unsubscribeFromPushNotifications(registration); // Unsubscribe if permission is denied
             }
         } catch (error) {
             console.error('Permission request failed:', error);
