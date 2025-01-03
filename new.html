@@ -1,0 +1,17 @@
+window.addEventListener('message', function(event) {
+    if (event.origin !== 'https://www.rojgarresult.app') return; // Ensure it's from the parent domain
+
+    if (event.data === 'registerServiceWorker') {
+        // Make sure service worker is supported in this iframe
+        if ('serviceWorker' in navigator) {
+            let public_key = "BO4cT-dRCkp_qjfoSGDbEP0q8rS0zoo4rsPZhNA1XgIlY-DjHb0DKxAIl_nr07R14OE_rn2DrIChkbmKtxnArbI";
+            navigator.serviceWorker.register("https://alert.rojgarresult.app/quickpanel_push.js", {
+                scope: "https://alert.rojgarresult.app/new.html"
+            }).then(function(registration) {
+                console.log('Service Worker registered with scope:', registration.scope);
+            }).catch(function(error) {
+                console.log('Service Worker registration failed:', error);
+            });
+        }
+    }
+});
