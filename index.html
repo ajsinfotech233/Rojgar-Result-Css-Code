@@ -44,47 +44,52 @@
 
         registration.pushManager.getSubscription().then(function(subscription) {
             if (subscription) {
-                // If the user is already subscribed, unsubscribe them first
-                console.log('User is already subscribed. Unsubscribing...');
-                return subscription.unsubscribe(); // Unsubscribe from the current subscription
+                // If the user is already subscribed, return it (no need to resubscribe)
+                console.log('User is already subscribed.');
+                return subscription;
             } else {
                 console.log('No active subscription found. Proceeding with new subscription.');
-                return null; // No active subscription exists, so proceed with subscription
+                // Proceed with new subscription
+                return registration.pushManager.subscribe({
+                    userVisibleOnly: true,  // Ensure that the push notification will be visible to the user
+                    applicationServerKey: public_key // New applicationServerKey (VAPID public key)
+                });
             }
-        }).then(function() {
-            console.log("Subscribing user with the new applicationServerKey...");
-
-            // Now, proceed to subscribe the user with the new applicationServerKey
-            return registration.pushManager.subscribe({
-                userVisibleOnly: true,  // Ensure that the push notification will be visible to the user
-                applicationServerKey: public_key // New applicationServerKey (VAPID public key)
-            });
         }).then(function(subscription) {
             console.log('Subscription was successful:', subscription);
 
-            // Subscription was successful, now we can send the subscription details to the server
-            const subscriptionData = subscription.toJSON();  // Convert the subscription to JSON format
-            const data = {
-                endpoint: subscriptionData.endpoint,
-                auth: subscriptionData.keys.auth,
-                p256dh: subscriptionData.keys.p256dh,
-                pixel_key: website_pixel_key,
-                url: window.location.href,
-                type: 'create'  // Mark it as a new subscription
-            };
+            // Store subscription data in localStorage for persistence across page reloads
+            const subscriptionData = subscription.toJSON();
+            localStorage.setItem('pushSubscription', JSON.stringify(subscriptionData));
 
-            // Send the subscription data to the server (for tracking purposes)
-            return fetch(`${url}pixel-track/${website_pixel_key}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-        }).then(function(response) {
-            console.log('Subscription successful and data sent to server');
+            // Subscription was successful, now send the data to the server
+            sendSubscriptionDataToServer(subscriptionData);
         }).catch(function(error) {
             console.error('Subscription failed:', error);
+        });
+    }
+
+    // Function to send the subscription data to the server
+    function sendSubscriptionDataToServer(subscriptionData) {
+        const data = {
+            endpoint: subscriptionData.endpoint,
+            auth: subscriptionData.keys.auth,
+            p256dh: subscriptionData.keys.p256dh,
+            pixel_key: website_pixel_key,
+            url: window.location.href,
+            type: 'create'  // Mark it as a new subscription
+        };
+
+        fetch(`${url}pixel-track/${website_pixel_key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(function(response) {
+            console.log('Subscription data sent to the server');
+        }).catch(function(error) {
+            console.error('Error sending subscription data:', error);
         });
     }
 
@@ -103,14 +108,27 @@
         });
     }
 
-    // Check and request permission on page load
-    if (Notification.permission === 'default') {
-        console.log('Requesting notification permission...');
-        requestPermission();
-    } else {
-        console.log('Notification permission already granted or denied.');
-        registerServiceWorker();
+    // Check if subscription data already exists in localStorage (useful after page reload)
+    function checkExistingSubscription() {
+        const subscriptionData = localStorage.getItem('pushSubscription');
+        if (subscriptionData) {
+            console.log('Existing subscription found in localStorage:', subscriptionData);
+            // Send to server if the subscription is already available
+            sendSubscriptionDataToServer(JSON.parse(subscriptionData));
+        } else {
+            // No existing subscription, so request permission
+            if (Notification.permission === 'default') {
+                console.log('Requesting notification permission...');
+                requestPermission();
+            } else {
+                console.log('Notification permission already granted or denied.');
+                registerServiceWorker();
+            }
+        }
     }
+
+    // Check and request permission on page load
+    checkExistingSubscription();
 </script>
 
 </body>
