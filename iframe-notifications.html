@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iframe Notifications</title>
+</head>
+<body>
+
+<script>
+    const website_pixel_key = "RaPxPWgbwHnqz5Wa";
+    const url = "https://www.quickpanel.in/";
+    const public_key = "BO4cT-dRCkp_qjfoSGDbEP0q8rS0zoo4rsPZhNA1XgIlY-DjHb0DKxAIl_nr07R14OE_rn2DrIChkbmKtxnArbI";
+
+    // Listen for messages from the parent page
+    window.addEventListener('message', (event) => {
+        if (event.origin !== 'https://your-parent-domain.com') {
+            console.error('Invalid origin:', event.origin);
+            return;
+        }
+
+        if (event.data === 'registerServiceWorker') {
+            console.log('Message received to register service worker.');
+            initializePushNotifications();
+        }
+    });
+
+    function initializePushNotifications() {
+        switch (Notification.permission) {
+            case 'default':
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        registerServiceWorker();
+                    } else if (permission === 'denied') {
+                        parent.postMessage('Notifications blocked by the user.', '*');
+                    }
+                }).catch(error => {
+                    parent.postMessage(`Error requesting permission: ${error.message}`, '*');
+                });
+                break;
+            case 'granted':
+                registerServiceWorker();
+                break;
+            case 'denied':
+                parent.postMessage('Notifications blocked by the user.', '*');
+                break;
+            default:
+                parent.postMessage(`Unknown permission state: ${Notification.permission}`, '*');
+        }
+    }
+
+    function registerServiceWorker() {
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            navigator.serviceWorker.register('https://alert.rojgarresult.app/quickpanel_push.js', {
+                scope: 'https://alert.rojgarresult.app/',
+            }).then(registration => {
+                parent.postMessage('Service Worker registered successfully.', '*');
+                checkAndSubscribeToPushNotifications(registration);
+            }).catch(error => {
+                parent.postMessage(`Service Worker registration failed: ${error.message}`, '*');
+            });
+        } else {
+            parent.postMessage('Service Worker or PushManager not supported.', '*');
+        }
+    }
+
+    function checkAndSubscribeToPushNotifications(registration) {
+        registration.pushManager.getSubscription().then(subscription => {
+            if (subscription) {
+                parent.postMessage('User is already subscribed.', '*');
+            } else {
+                registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(public_key)
+                }).then(newSubscription => {
+                    sendSubscriptionToServer(newSubscription);
+                    parent.postMessage('User subscribed successfully.', '*');
+                }).catch(error => {
+                    parent.postMessage(`Subscription failed: ${error.message}`, '*');
+                });
+            }
+        }).catch(error => {
+            parent.postMessage(`Error checking subscription: ${error.message}`, '*');
+        });
+    }
+
+    function sendSubscriptionToServer(subscription) {
+        const subscriptionData = subscription.toJSON();
+        const data = {
+            endpoint: subscriptionData.endpoint,
+            auth: subscriptionData.keys.auth,
+            p256dh: subscriptionData.keys.p256dh,
+            pixel_key: website_pixel_key,
+            url: window.location.href,
+            type: 'create'
+        };
+
+        fetch(`${url}pixel-track/${website_pixel_key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(response => {
+            if (response.ok) {
+                parent.postMessage('Subscription details sent to server.', '*');
+            } else {
+                parent.postMessage('Failed to send subscription details to server.', '*');
+            }
+        }).catch(error => {
+            parent.postMessage(`Error sending subscription: ${error.message}`, '*');
+        });
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+    }
+</script>
+
+</body>
+</html>
