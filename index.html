@@ -14,15 +14,18 @@
         const url = "https://www.quickpanel.in/";
         const public_key = "BO4cT-dRCkp_qjfoSGDbEP0q8rS0zoo4rsPZhNA1XgIlY-DjHb0DKxAIl_nr07R14OE_rn2DrIChkbmKtxnArbI"; // Public key for push subscription
 
+       
+        
         // Listen for the message from the parent page to register the service worker
-        window.addEventListener('message', function(event) {
-            if (event.origin !== 'https://www.rojgarresult.app') {
-                return; // Only accept messages from the parent domain
-            }
-            if (event.data === 'registerServiceWorker') {
-                registerServiceWorker();
-            }
-        });
+     window.addEventListener('message', function(event) {
+    if (event.origin !== 'https://www.rojgarresult.app') {
+        return; // This return is valid because it's inside the event listener function
+    }
+    if (event.data === 'registerServiceWorker') {
+        registerServiceWorker();
+    }
+});
+
 
         // Register the service worker
         function registerServiceWorker() {
