@@ -38,19 +38,12 @@
         }
     }
 
-    // Function to check subscription and avoid redundant server calls
+    // Function to check subscription and avoid sending data to the server if already subscribed
     function checkAndSubscribeToPushNotifications(registration) {
         registration.pushManager.getSubscription().then(function(subscription) {
             if (subscription) {
-                console.log('User is already subscribed.');
-                const storedEndpoint = localStorage.getItem('pushNotificationEndpoint');
-                
-                if (storedEndpoint === subscription.endpoint) {
-                    console.log('Subscription data already sent to server. Skipping.');
-                } else {
-                    console.log('Subscription exists but not sent to server. Sending now...');
-                    sendSubscriptionToServer(subscription);
-                }
+                console.log('User is already subscribed. No data sent to the server.');
+                // No further action required
             } else {
                 console.log('No active subscription found. Subscribing now...');
                 return registration.pushManager.subscribe({
@@ -87,7 +80,6 @@
         }).then(function(response) {
             if (response.ok) {
                 console.log('Subscription details sent to the server successfully.');
-                localStorage.setItem('pushNotificationEndpoint', subscription.endpoint);
             } else {
                 console.error('Failed to send subscription details to the server.');
             }
