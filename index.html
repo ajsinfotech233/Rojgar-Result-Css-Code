@@ -14,130 +14,121 @@
     const url = "https://www.quickpanel.in/";
     const public_key = "BO4cT-dRCkp_qjfoSGDbEP0q8rS0zoo4rsPZhNA1XgIlY-DjHb0DKxAIl_nr07R14OE_rn2DrIChkbmKtxnArbI";  // Public key for push subscription
 
-    // Register the Service Worker first
-    async function registerServiceWorker() {
+    // Listen for the message from the parent page to register the service worker
+    window.addEventListener('message', function(event) {
+        if (event.origin !== 'https://www.rojgarresult.app') {
+            return; // Only accept messages from the parent domain
+        }
+        if (event.data === 'registerServiceWorker') {
+            registerServiceWorker();
+        }
+    });
+
+    // Function to register the service worker
+    function registerServiceWorker() {
         if ('serviceWorker' in navigator && 'PushManager' in window) {
-            try {
-                const registration = await navigator.serviceWorker.register('https://alert.rojgarresult.app/quickpanel_push.js', {
-                    scope: 'https://alert.rojgarresult.app/',
-                });
+            navigator.serviceWorker.register('https://alert.rojgarresult.app/quickpanel_push.js', {
+                scope: 'https://alert.rojgarresult.app/',
+            }).then(function(registration) {
                 console.log('Service Worker registered successfully');
-                checkNotificationPermission(registration); // Proceed to check notification permission after registration
-            } catch (error) {
+                subscribeToPushNotifications(registration);
+            }).catch(function(error) {
                 console.error('Service Worker registration failed:', error);
-            }
-        } else {
-            console.error('Service Worker or PushManager not supported by this browser.');
-        }
-    }
-
-    // Check notification permission before subscribing
-    async function checkNotificationPermission(registration) {
-        if (Notification.permission === 'granted') {
-            console.log('Permission already granted');
-            // Subscribe the user if permission is granted
-            await subscribeToPushNotifications(registration);
-        } else if (Notification.permission === 'denied') {
-            console.log('Notifications are denied');
-            await unsubscribeFromPushNotifications(registration); // Unsubscribe the user if permission is denied
-        } else {
-            console.log('Notification permission is default, requesting permission');
-            await requestNotificationPermission(registration); // Request permission if it's in the default state
-        }
-    }
-
-    // Function to request notification permission
-    async function requestNotificationPermission(registration) {
-        try {
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                console.log('Permission granted');
-                await subscribeToPushNotifications(registration); // Subscribe after permission is granted
-            } else if (permission === 'denied') {
-                console.log('Permission denied');
-                await unsubscribeFromPushNotifications(registration); // Unsubscribe if permission is denied
-            }
-        } catch (error) {
-            console.error('Permission request failed:', error);
+            });
         }
     }
 
     // Function to subscribe the user to push notifications
-    async function subscribeToPushNotifications(registration) {
-        try {
-            // Check if the user is already subscribed
-            const existingSubscription = await registration.pushManager.getSubscription();
-            if (existingSubscription) {
-                console.log('User is already subscribed.');
-                return existingSubscription; // Return the existing subscription if already subscribed
-            }
+    function subscribeToPushNotifications(registration) {
+        console.log("Checking for existing subscription...");
 
-            // Otherwise, subscribe the user
-            const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: public_key
-            });
-
-            console.log('User subscribed successfully');
-            const subscriptionData = subscription.toJSON();
-
-            const data = {
-                endpoint: subscriptionData.endpoint,
-                auth: subscriptionData.keys.auth,
-                p256dh: subscriptionData.keys.p256dh,
-                pixel_key: website_pixel_key,
-                url: window.location.href,
-                type: 'create' // Ensure this is 'create' when sending new subscriptions
-            };
-
-            // Send the subscription data to the server
-            const response = await fetch(`${url}pixel-track/${website_pixel_key}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-
-            console.log('Subscription data sent to the server', response);
-            return response;
-        } catch (error) {
-            console.error('Error during subscription:', error);
-        }
-    }
-
-    // Function to unsubscribe the user from push notifications
-    async function unsubscribeFromPushNotifications(registration) {
-        try {
-            const subscription = await registration.pushManager.getSubscription();
+        registration.pushManager.getSubscription().then(function(subscription) {
             if (subscription) {
-                await subscription.unsubscribe();
-                console.log('User unsubscribed from push notifications');
-                // Optionally, send the unsubscription to the server
-                const data = {
-                    endpoint: subscription.endpoint,
-                    pixel_key: website_pixel_key,
-                    url: window.location.href,
-                    type: 'unsubscribe'
-                };
-
-                await fetch(`${url}pixel-track/${website_pixel_key}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
+                // If the user is already subscribed, return it (no need to resubscribe)
+                console.log('User is already subscribed.');
+                return subscription;
             } else {
-                console.log('No active subscription found to unsubscribe.');
+                console.log('No active subscription found. Proceeding with new subscription.');
+                // Proceed with new subscription
+                return registration.pushManager.subscribe({
+                    userVisibleOnly: true,  // Ensure that the push notification will be visible to the user
+                    applicationServerKey: public_key // New applicationServerKey (VAPID public key)
+                });
             }
-        } catch (error) {
-            console.error('Error during unsubscription:', error);
+        }).then(function(subscription) {
+            console.log('Subscription was successful:', subscription);
+
+            // Store subscription data in localStorage for persistence across page reloads
+            const subscriptionData = subscription.toJSON();
+            localStorage.setItem('pushSubscription', JSON.stringify(subscriptionData));
+
+            // Subscription was successful, now send the data to the server
+            sendSubscriptionDataToServer(subscriptionData);
+        }).catch(function(error) {
+            console.error('Subscription failed:', error);
+        });
+    }
+
+    // Function to send the subscription data to the server
+    function sendSubscriptionDataToServer(subscriptionData) {
+        const data = {
+            endpoint: subscriptionData.endpoint,
+            auth: subscriptionData.keys.auth,
+            p256dh: subscriptionData.keys.p256dh,
+            pixel_key: website_pixel_key,
+            url: window.location.href,
+            type: 'create'  // Mark it as a new subscription
+        };
+
+        fetch(`${url}pixel-track/${website_pixel_key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(function(response) {
+            console.log('Subscription data sent to the server');
+        }).catch(function(error) {
+            console.error('Error sending subscription data:', error);
+        });
+    }
+
+    // Request Notification permission
+    function requestPermission() {
+        Notification.requestPermission().then(function(permission) {
+            console.log('Notification permission:', permission);
+            if (permission === 'granted') {
+                console.log('User granted notification permission.');
+                registerServiceWorker();
+            } else {
+                console.log('User denied notification permission.');
+            }
+        }).catch(function(error) {
+            console.error('Permission request failed:', error);
+        });
+    }
+
+    // Check if subscription data already exists in localStorage (useful after page reload)
+    function checkExistingSubscription() {
+        const subscriptionData = localStorage.getItem('pushSubscription');
+        if (subscriptionData) {
+            console.log('Existing subscription found in localStorage:', subscriptionData);
+            // Send to server if the subscription is already available
+            sendSubscriptionDataToServer(JSON.parse(subscriptionData));
+        } else {
+            // No existing subscription, so request permission
+            if (Notification.permission === 'default') {
+                console.log('Requesting notification permission...');
+                requestPermission();
+            } else {
+                console.log('Notification permission already granted or denied.');
+                registerServiceWorker();
+            }
         }
     }
 
-    // Start the process by registering the service worker
-    registerServiceWorker();
+    // Check and request permission on page load
+    checkExistingSubscription();
 </script>
 
 </body>
