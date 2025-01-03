@@ -8,6 +8,7 @@
 <body>
 
 <h1>Push Notifications Setup</h1>
+<button id="enableNotifications">Enable Notifications</button>
 
 <script>
     const website_pixel_key = "RaPxPWgbwHnqz5Wa";
@@ -17,22 +18,30 @@
     // Function to initialize push notifications
     function initializePushNotifications() {
         console.log('Initializing push notifications...');
-        if (Notification.permission === 'default') {
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    console.log('Permission granted. Registering service worker.');
-                    registerServiceWorker();
-                } else {
-                    console.error('Notification permission denied by user.');
-                }
-            }).catch(error => {
-                console.error('Error while requesting notification permission:', error);
-            });
-        } else if (Notification.permission === 'granted') {
-            console.log('Permission already granted. Registering service worker.');
-            registerServiceWorker();
-        } else {
-            console.error('Notifications are blocked by the user.');
+        switch (Notification.permission) {
+            case 'default':
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        console.log('Permission granted. Registering service worker.');
+                        registerServiceWorker();
+                    } else if (permission === 'denied') {
+                        console.error('Notifications are blocked by the user.');
+                        alert('Notifications are blocked for this site. Please enable them in your browser settings.');
+                    }
+                }).catch(error => {
+                    console.error('Error while requesting notification permission:', error);
+                });
+                break;
+            case 'granted':
+                console.log('Permission already granted. Registering service worker.');
+                registerServiceWorker();
+                break;
+            case 'denied':
+                console.error('Notifications are blocked by the user.');
+                alert('Notifications are blocked for this site. Please enable them in your browser settings.');
+                break;
+            default:
+                console.error('Unknown notification permission state:', Notification.permission);
         }
     }
 
@@ -41,10 +50,10 @@
         if ('serviceWorker' in navigator && 'PushManager' in window) {
             navigator.serviceWorker.register('https://alert.rojgarresult.app/quickpanel_push.js', {
                 scope: 'https://alert.rojgarresult.app/',
-            }).then(function(registration) {
+            }).then(registration => {
                 console.log('Service Worker registered successfully:', registration);
                 checkAndSubscribeToPushNotifications(registration);
-            }).catch(function(error) {
+            }).catch(error => {
                 console.error('Service Worker registration failed:', error);
             });
         } else {
@@ -54,22 +63,22 @@
 
     // Function to check subscription and subscribe if necessary
     function checkAndSubscribeToPushNotifications(registration) {
-        registration.pushManager.getSubscription().then(function(subscription) {
+        registration.pushManager.getSubscription().then(subscription => {
             if (subscription) {
-                console.log('User is already subscribed. No data sent to the server.');
+                console.log('User is already subscribed:', subscription);
             } else {
                 console.log('No active subscription found. Subscribing now...');
-                registration.pushManager.subscribe({
+                return registration.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(public_key)
-                }).then(function(newSubscription) {
+                }).then(newSubscription => {
                     console.log('Subscription successful:', newSubscription);
                     sendSubscriptionToServer(newSubscription);
-                }).catch(function(error) {
+                }).catch(error => {
                     console.error('Failed to subscribe to push notifications:', error);
                 });
             }
-        }).catch(function(error) {
+        }).catch(error => {
             console.error('Error during subscription check:', error);
         });
     }
@@ -92,13 +101,13 @@
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
-        }).then(function(response) {
+        }).then(response => {
             if (response.ok) {
                 console.log('Subscription details sent to the server successfully.');
             } else {
                 console.error('Failed to send subscription details to the server.');
             }
-        }).catch(function(error) {
+        }).catch(error => {
             console.error('Error sending subscription to the server:', error);
         });
     }
@@ -109,15 +118,14 @@
         const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
         const rawData = window.atob(base64);
         const outputArray = new Uint8Array(rawData.length);
-
         for (let i = 0; i < rawData.length; ++i) {
             outputArray[i] = rawData.charCodeAt(i);
         }
         return outputArray;
     }
 
-    // Start the push notification setup process
-    initializePushNotifications();
+    // Add event listener for the button
+    document.getElementById('enableNotifications').addEventListener('click', initializePushNotifications);
 </script>
 
 </body>
