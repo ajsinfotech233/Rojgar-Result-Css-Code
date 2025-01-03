@@ -27,32 +27,11 @@
             return;
         }
 
-       // Function to register service worker in iframe after loading
-    function registerServiceWorkerInIframe() {
-        const iframe = document.getElementById('iframe');
-        iframe.onload = () => {
-            try {
-                // Send message to iframe to register the service worker
-                iframe.contentWindow.postMessage('registerServiceWorker', 'https://alert.rojgarresult.app');
-            } catch (error) {
-                console.error("Error during iframe communication:", error);
-            }
-        };
-    }
-
-    // Listen for messages from iframe
-    window.addEventListener("message", function(event) {
-        // Verify that the message is from the expected iframe origin
-        if (event.origin === 'https://alert.rojgarresult.app') {
-            if (event.data === 'serviceWorkerRegistered') {
-                console.log("Service Worker successfully registered in iframe.");
-                // Now that service worker is active, you can proceed to subscribe
-                subscribeToPushNotifications();
-            }
-        } else {
-            console.warn("Received message from untrusted origin:", event.origin);
-        }
-    });
+        /* Register the main service worker */
+        let public_key = "BO4cT-dRCkp_qjfoSGDbEP0q8rS0zoo4rsPZhNA1XgIlY-DjHb0DKxAIl_nr07R14OE_rn2DrIChkbmKtxnArbI";
+        await navigator.serviceWorker.register("https:\/\/alert.rojgarresult.app\/quickpanel_push.js", {
+            scope: "https:\/\/www.rojgarresult.app\/",
+        });
 
         /* Helper to easily send logs */
         let send_tracking_data = async data => {
