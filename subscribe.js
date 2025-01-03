@@ -8,7 +8,7 @@ async function subscribeUser() {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       const sw = await navigator.serviceWorker.ready;
-      const publicKey = 'YOUR_PUBLIC_VAPID_KEY'; // Replace with your own VAPID key
+      const publicKey = 'BBsh736IWv_0pqDl2foq6-Xc6mq3zY91H6fjkuDrbrm_hITCpfBXtdpj88LjiDAAfT-pi7z0niZ5Qk8wE2ovF3g'; // Replace with your own VAPID key
       const subscription = await sw.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: publicKey,
