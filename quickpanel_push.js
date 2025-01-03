@@ -1,11 +1,11 @@
 self.addEventListener('push', function(event) {
     let options = {
         body: event.data.text(),
-        icon: 'images/icon.png', // You can customize this
-        badge: 'images/badge.png', // Customize this too
+        icon: 'images/icon.png', // Customize the icon
+        badge: 'images/badge.png', // Customize the badge
         vibrate: [100, 50, 100],
         data: {
-            url: event.data.url
+            url: event.data.url // Data to open the correct URL
         }
     };
 
