@@ -1,22 +1,23 @@
-self.addEventListener('push', event => {
-    const data = event.data.json();
-
-    const title = data.title || "Default Title";
-    const options = {
-        body: data.message || "Default message",
-        icon: data.icon || "/icon.png",
-        badge: data.badge || "/badge.png",
+self.addEventListener('push', function(event) {
+    let options = {
+        body: event.data.text(),
+        icon: 'images/icon.png', // You can customize this
+        badge: 'images/badge.png', // Customize this too
+        vibrate: [100, 50, 100],
         data: {
-            url: data.url || "https://www.rojgarresult.app"
+            url: event.data.url
         }
     };
 
-    event.waitUntil(self.registration.showNotification(title, options));
+    event.waitUntil(
+        self.registration.showNotification('New Notification', options)
+    );
 });
 
-self.addEventListener('notificationclick', event => {
+// Handle notification clicks
+self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     event.waitUntil(
-        clients.openWindow(event.notification.data.url || 'https://www.rojgarresult.app')
+        clients.openWindow(event.notification.data.url)
     );
 });
