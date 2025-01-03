@@ -40,9 +40,23 @@
 
         // Function to subscribe the user to push notifications
         function subscribeToPushNotifications(registration) {
-            registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: public_key
+            // Check if the user is already subscribed
+            registration.pushManager.getSubscription().then(function(subscription) {
+                if (subscription) {
+                    console.log('User is already subscribed, unsubscribing...');
+                    // Unsubscribe the user first if they are already subscribed
+                    return subscription.unsubscribe();
+                } else {
+                    console.log('No active subscription found');
+                    // If no subscription exists, proceed to subscribe
+                    return null;
+                }
+            }).then(function() {
+                // Now, subscribe the user again with the correct key
+                return registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: public_key
+                });
             }).then(function(subscription) {
                 // Convert subscription to JSON to send to the server
                 const subscriptionData = subscription.toJSON();
