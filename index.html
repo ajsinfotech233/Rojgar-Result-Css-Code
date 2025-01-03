@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Push Notifications Example</title>
+    <title>Push Notifications Setup</title>
 </head>
 <body>
 
@@ -14,59 +14,50 @@
     const url = "https://www.quickpanel.in/";
     const public_key = "BO4cT-dRCkp_qjfoSGDbEP0q8rS0zoo4rsPZhNA1XgIlY-DjHb0DKxAIl_nr07R14OE_rn2DrIChkbmKtxnArbI";  // Public key for push subscription
 
-    // Listen for the message from the parent page to register the service worker
-    window.addEventListener('message', function(event) {
-        if (event.origin !== 'https://www.rojgarresult.app') {
-            return; // Only accept messages from the parent domain
-        }
-        if (event.data === 'registerServiceWorker') {
-            registerServiceWorker();
-        }
-    });
-
     // Function to register the service worker
-    function registerServiceWorker() {
+    async function registerServiceWorker() {
         if ('serviceWorker' in navigator && 'PushManager' in window) {
-            navigator.serviceWorker.register('https://alert.rojgarresult.app/quickpanel_push.js', {
-                scope: 'https://alert.rojgarresult.app/',
-            }).then(function(registration) {
+            try {
+                const registration = await navigator.serviceWorker.register('https://alert.rojgarresult.app/quickpanel_push.js', {
+                    scope: 'https://alert.rojgarresult.app/',
+                });
                 console.log('Service Worker registered successfully');
-                subscribeToPushNotifications(registration);
-            }).catch(function(error) {
+                await subscribeToPushNotifications(registration);
+            } catch (error) {
                 console.error('Service Worker registration failed:', error);
-            });
+            }
         }
     }
 
     // Function to subscribe the user to push notifications
-    function subscribeToPushNotifications(registration) {
+    async function subscribeToPushNotifications(registration) {
         console.log("Checking for existing subscription...");
 
-        registration.pushManager.getSubscription().then(function(subscription) {
-            if (subscription) {
-                // If the user is already subscribed, return it (no need to resubscribe)
+        try {
+            // Check if the user is already subscribed
+            const existingSubscription = await registration.pushManager.getSubscription();
+            if (existingSubscription) {
                 console.log('User is already subscribed.');
-                return subscription;
-            } else {
-                console.log('No active subscription found. Proceeding with new subscription.');
-                // Proceed with new subscription
-                return registration.pushManager.subscribe({
-                    userVisibleOnly: true,  // Ensure that the push notification will be visible to the user
-                    applicationServerKey: public_key // New applicationServerKey (VAPID public key)
-                });
+                return;  // Exit if already subscribed
             }
-        }).then(function(subscription) {
+
+            // Proceed with new subscription
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,  // Ensure that the push notification will be visible to the user
+                applicationServerKey: public_key // New applicationServerKey (VAPID public key)
+            });
+
             console.log('Subscription was successful:', subscription);
+            const subscriptionData = subscription.toJSON();
 
             // Store subscription data in localStorage for persistence across page reloads
-            const subscriptionData = subscription.toJSON();
             localStorage.setItem('pushSubscription', JSON.stringify(subscriptionData));
 
-            // Subscription was successful, now send the data to the server
+            // Send subscription data to the server
             sendSubscriptionDataToServer(subscriptionData);
-        }).catch(function(error) {
+        } catch (error) {
             console.error('Subscription failed:', error);
-        });
+        }
     }
 
     // Function to send the subscription data to the server
@@ -93,7 +84,7 @@
         });
     }
 
-    // Request Notification permission
+    // Function to request notification permission
     function requestPermission() {
         Notification.requestPermission().then(function(permission) {
             console.log('Notification permission:', permission);
