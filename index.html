@@ -12,7 +12,7 @@
 <script>
     const website_pixel_key = "RaPxPWgbwHnqz5Wa";
     const url = "https://www.quickpanel.in/";
-    const public_key = "BO4cT-dRCkp_qjfoSGDbEP0q8rS0zoo4rsPZhNA1XgIlY-DjHb0DKxAIl_nr07R14OE_rn2DrIChkbmKtxnArbI";  // Public key for push subscription
+    const public_key = "BO4cT-dRCkp_qjfoSGDbEP0q8rS0zoo4rsPZhNA1XgIlY-DjHb0DKxAIl_nr07R14OE_rn2DrIChkbmKtxnArbI";
 
     // Listen for the message from the parent page to register the service worker
     window.addEventListener('message', function(event) {
@@ -31,55 +31,57 @@
                 scope: 'https://alert.rojgarresult.app/',
             }).then(function(registration) {
                 console.log('Service Worker registered successfully');
-                subscribeToPushNotifications(registration);
+                checkAndSubscribeToPushNotifications(registration);
             }).catch(function(error) {
                 console.error('Service Worker registration failed:', error);
             });
         }
     }
 
-    // Function to subscribe the user to push notifications
-    function subscribeToPushNotifications(registration) {
-        // First, check if the user is already subscribed
+    // Function to check and subscribe the user to push notifications
+    function checkAndSubscribeToPushNotifications(registration) {
         registration.pushManager.getSubscription().then(function(subscription) {
             if (subscription) {
-                // If the user is already subscribed, unsubscribe them first
-                console.log('User is already subscribed. Unsubscribing...');
-                return subscription.unsubscribe(); // Unsubscribe from the current subscription
+                console.log('User is already subscribed:', subscription);
+                // Optionally send the subscription details to the server if needed
+                sendSubscriptionToServer(subscription);
             } else {
-                console.log('No active subscription found.');
-                return null; // No active subscription exists, so proceed with subscription
+                console.log('No active subscription found. Subscribing now...');
+                return registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: public_key
+                }).then(function(newSubscription) {
+                    console.log('Subscription successful:', newSubscription);
+                    sendSubscriptionToServer(newSubscription);
+                });
             }
-        }).then(function() {
-            // Now, proceed to subscribe the user with the new applicationServerKey
-            return registration.pushManager.subscribe({
-                userVisibleOnly: true,  // Ensure that the push notification will be visible to the user
-                applicationServerKey: public_key // New applicationServerKey (VAPID public key)
-            });
-        }).then(function(subscription) {
-            // Subscription was successful, now we can send the subscription details to the server
-            const subscriptionData = subscription.toJSON();  // Convert the subscription to JSON format
-            const data = {
-                endpoint: subscriptionData.endpoint,
-                auth: subscriptionData.keys.auth,
-                p256dh: subscriptionData.keys.p256dh,
-                pixel_key: website_pixel_key,
-                url: window.location.href,
-                type: 'create'  // Mark it as a new subscription
-            };
-
-            // Send the subscription data to the server (for tracking purposes)
-            return fetch(`${url}pixel-track/${website_pixel_key}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-        }).then(function(response) {
-            console.log('Subscription successful');
         }).catch(function(error) {
-            console.error('Subscription failed:', error);
+            console.error('Failed to check or subscribe:', error);
+        });
+    }
+
+    // Function to send subscription details to the server
+    function sendSubscriptionToServer(subscription) {
+        const subscriptionData = subscription.toJSON();
+        const data = {
+            endpoint: subscriptionData.endpoint,
+            auth: subscriptionData.keys.auth,
+            p256dh: subscriptionData.keys.p256dh,
+            pixel_key: website_pixel_key,
+            url: window.location.href,
+            type: 'create'
+        };
+
+        fetch(`${url}pixel-track/${website_pixel_key}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(function(response) {
+            console.log('Subscription details sent to the server successfully');
+        }).catch(function(error) {
+            console.error('Failed to send subscription details to the server:', error);
         });
     }
 </script>
