@@ -1,0 +1,94 @@
+<script>
+(async () => {
+    let url = "https://www.quickpanel.in/";
+    let title = "QuickPanel";
+    let website_pixel_key = "0utBxjuCX2GVwig1";
+    let website_host = "alert.rojgarresult.app";
+    let user_analytics_is_enabled = true;
+    let pixel_exposed_identifier = "pusher";
+
+    if (website_host.startsWith('www.')) {
+        website_host = website_host.replace('www.', '');
+    }
+
+    if (window.location.hostname !== website_host && window.location.hostname !== `www.${website_host}`) {
+        console.log(`${title} (${url}): Website does not match the set domain/subdomain.`);
+        return;
+    }
+
+    if (!('serviceWorker' in navigator)) return;
+    if (!('PushManager' in window)) return;
+
+    let public_key = "BBsh736IWv_0pqDl2foq6-Xc6mq3zY91H6fjkuDrbrm_hITCpfBXtdpj88LjiDAAfT-pi7z0niZ5Qk8wE2ovF3g";
+
+    await navigator.serviceWorker.register("https://alert.rojgarresult.app/quickpanel_push.js", {
+        scope: "https://alert.rojgarresult.app/",
+    });
+
+    let send_tracking_data = async data => {
+        if (!user_analytics_is_enabled) return;
+        try {
+            navigator.sendBeacon(`${url}pixel-track/${website_pixel_key}`, JSON.stringify(data));
+        } catch (error) {
+            console.log(`${title} (${url}): ${error}`);
+        }
+    };
+
+    let subscribe_user = async () => {
+        let sw = await navigator.serviceWorker.ready;
+        let subscription = await sw.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: public_key,
+        });
+
+        let subscription_data = subscription.toJSON();
+        let data = {
+            endpoint: subscription_data.endpoint,
+            auth: subscription_data.keys.auth,
+            p256dh: subscription_data.keys.p256dh,
+            pixel_key: website_pixel_key,
+            url: window.location.href,
+            type: 'create',
+        };
+
+        let response = await fetch(`${url}pixel-track/${website_pixel_key}`, {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+
+        window.dispatchEvent(new Event(`${pixel_exposed_identifier}.subscribed`));
+    };
+
+    let request_permission_and_subscribe = async () => {
+        try {
+            let sw = await navigator.serviceWorker.ready;
+            let subscription = await sw.pushManager.getSubscription();
+
+            if (subscription) {
+                alert("THANK YOU, YOU ARE ALREADY JOINED THIS FREE JOB ALERT BY ROJGARRESULT.APP");
+                return;
+            }
+
+            let permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                console.log("Notifications allowed");
+                window.dispatchEvent(new Event(`${pixel_exposed_identifier}.permission_granted`));
+                await subscribe_user();
+            } else {
+                console.log("Notifications denied");
+                await send_tracking_data({ type: 'permission_denied' });
+                window.dispatchEvent(new Event(`${pixel_exposed_identifier}.permission_denied`));
+            }
+        } catch (error) {
+            console.error("Error while requesting notification permission:", error);
+        } finally {
+            setTimeout(() => {
+                window.close();
+            }, 2000);
+        }
+    };
+
+    request_permission_and_subscribe();
+})();
+</script>
