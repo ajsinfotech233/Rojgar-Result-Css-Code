@@ -1,93 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Push Notifications Example</title>
+	<title>Latest Job</title>
+	<meta http-equiv="Refresh" content="0; url=https://www.rojgarresult.app/2024/12/latest-job.html">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta charset="utf-8">
 </head>
 <body>
-
-<h1>Push Notifications Setup</h1>
-
-<script>
-    const website_pixel_key = "RaPxPWgbwHnqz5Wa";
-    const url = "https://www.quickpanel.in/";
-    const public_key = "BO4cT-dRCkp_qjfoSGDbEP0q8rS0zoo4rsPZhNA1XgIlY-DjHb0DKxAIl_nr07R14OE_rn2DrIChkbmKtxnArbI";
-
-    // Listen for the message from the parent page to register the service worker
-    window.addEventListener('message', function(event) {
-        if (event.origin !== 'https://www.rojgarresult.app') {
-            return; // Only accept messages from the parent domain
-        }
-        if (event.data === 'registerServiceWorker') {
-            registerServiceWorker();
-        }
-    });
-
-    // Function to register the service worker
-    function registerServiceWorker() {
-        if ('serviceWorker' in navigator && 'PushManager' in window) {
-            navigator.serviceWorker.register('https://alert.rojgarresult.app/quickpanel_push.js', {
-                scope: 'https://alert.rojgarresult.app/',
-            }).then(function(registration) {
-                console.log('Service Worker registered successfully');
-                checkAndSubscribeToPushNotifications(registration);
-            }).catch(function(error) {
-                console.error('Service Worker registration failed:', error);
-            });
-        }
-    }
-
-    // Function to check subscription and avoid sending data to the server if already subscribed
-    function checkAndSubscribeToPushNotifications(registration) {
-        registration.pushManager.getSubscription().then(function(subscription) {
-            if (subscription) {
-                console.log('User is already subscribed. No data sent to the server.');
-                // No further action required
-            } else {
-                console.log('No active subscription found. Subscribing now...');
-                return registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: public_key
-                }).then(function(newSubscription) {
-                    console.log('Subscription successful.');
-                    sendSubscriptionToServer(newSubscription);
-                });
-            }
-        }).catch(function(error) {
-            console.error('Error during subscription check:', error);
-        });
-    }
-
-    // Function to send subscription details to the server
-    function sendSubscriptionToServer(subscription) {
-        const subscriptionData = subscription.toJSON();
-        const data = {
-            endpoint: subscriptionData.endpoint,
-            auth: subscriptionData.keys.auth,
-            p256dh: subscriptionData.keys.p256dh,
-            pixel_key: website_pixel_key,
-            url: window.location.href,
-            type: 'create'
-        };
-
-        fetch(`${url}pixel-track/${website_pixel_key}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        }).then(function(response) {
-            if (response.ok) {
-                console.log('Subscription details sent to the server successfully.');
-            } else {
-                console.error('Failed to send subscription details to the server.');
-            }
-        }).catch(function(error) {
-            console.error('Error sending subscription to the server:', error);
-        });
-    }
-</script>
-
+	<!-- This page was made By https://www.html-code-generator.com/ -->
+	<h1>Rojgar Result</h1>
+	<h2>This site has now moved to <a href="https://www.rojgarresult.app/2024/12/latest-job.html">https://www.rojgarresult.app/2024/12/latest-job.html</a>.</h2>
+	<p>Your browser will automatically redirect you within 0 seconds. Please alter any <b>bookmarks</b></p>
+	<p>Many thanks</p>
 </body>
 </html>
